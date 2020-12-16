@@ -104,11 +104,10 @@ public class MountedContraption extends Contraption {
 	}
 
 	@Override
-	protected boolean movementAllowed(World world, BlockPos pos) {
-		BlockState blockState = world.getBlockState(pos);
-		if (!pos.equals(anchor) && AllBlocks.CART_ASSEMBLER.has(blockState))
-			return testSecondaryCartAssembler(world, blockState, pos);
-		return super.movementAllowed(world, pos);
+	protected boolean movementAllowed(BlockState state, World world, BlockPos pos) {
+		if (!pos.equals(anchor) && AllBlocks.CART_ASSEMBLER.has(state))
+			return testSecondaryCartAssembler(world, state, pos);
+		return super.movementAllowed(state, world, pos);
 	}
 
 	protected boolean testSecondaryCartAssembler(World world, BlockState state, BlockPos pos) {

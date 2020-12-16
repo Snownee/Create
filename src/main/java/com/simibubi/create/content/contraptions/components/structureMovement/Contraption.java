@@ -248,11 +248,11 @@ public abstract class Contraption {
 			return false;
 		if (isAnchoringBlockAt(pos))
 			return true;
-		if (!BlockMovementTraits.movementNecessary(world, pos))
-			return true;
-		if (!movementAllowed(world, pos))
-			return false;
 		BlockState state = world.getBlockState(pos);
+		if (!BlockMovementTraits.movementNecessary(state, world, pos))
+			return true;
+		if (!movementAllowed(state, world, pos))
+			return false;
 		if (state.getBlock() instanceof AbstractChassisBlock
 			&& !moveChassis(world, pos, forcedDirection, frontier, visited))
 			return false;
@@ -288,9 +288,10 @@ public abstract class Contraption {
 		}
 
 		// Cart assemblers attach themselves
-		BlockState stateBelow = world.getBlockState(pos.down());
-		if (!visited.contains(pos.down()) && AllBlocks.CART_ASSEMBLER.has(stateBelow))
-			frontier.add(pos.down());
+		BlockPos posDown = pos.down();
+		BlockState stateBelow = world.getBlockState(posDown);
+		if (!visited.contains(posDown) && AllBlocks.CART_ASSEMBLER.has(stateBelow))
+			frontier.add(posDown);
 
 		Map<Direction, SuperGlueEntity> superglue = SuperGlueHandler.gatherGlue(world, pos);
 
@@ -301,7 +302,7 @@ public abstract class Contraption {
 			BlockState blockState = world.getBlockState(offsetPos);
 			if (isAnchoringBlockAt(offsetPos))
 				continue;
-			if (!movementAllowed(world, offsetPos)) {
+			if (!movementAllowed(blockState, world, offsetPos)) {
 				if (offset == forcedDirection && isSlimeBlock)
 					return false;
 				continue;
@@ -504,8 +505,8 @@ public abstract class Contraption {
 		return globalPos.subtract(anchor);
 	}
 
-	protected boolean movementAllowed(World world, BlockPos pos) {
-		return BlockMovementTraits.movementAllowed(world, pos);
+	protected boolean movementAllowed(BlockState state, World world, BlockPos pos) {
+		return BlockMovementTraits.movementAllowed(state, world, pos);
 	}
 
 	protected boolean isAnchoringBlockAt(BlockPos pos) {

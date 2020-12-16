@@ -155,14 +155,14 @@ public class PistonContraption extends TranslatingContraption {
 			BlockPos currentPos = pos.offset(orientation, offset + initialExtensionProgress);
 			if (!world.isBlockPresent(currentPos))
 				return false;
-			if (!BlockMovementTraits.movementNecessary(world, currentPos))
-				return true;
 			BlockState state = world.getBlockState(currentPos);
+			if (!BlockMovementTraits.movementNecessary(state, world, currentPos))
+				return true;
 			if (BlockMovementTraits.isBrittle(state) && !(state.getBlock() instanceof CarpetBlock))
 				return true;
 			if (isPistonHead(state) && state.get(FACING) == direction.getOpposite())
 				return true;
-			if (!BlockMovementTraits.movementAllowed(world, currentPos))
+			if (!BlockMovementTraits.movementAllowed(state, world, currentPos))
 				return retracting;
 			frontier.add(currentPos);
 			if (BlockMovementTraits.notSupportive(state, orientation))

@@ -166,7 +166,7 @@ public class ChassisTileEntity extends SmartTileEntity {
 					break;
 
 				// Ignore replaceable Blocks and Air-like
-				if (!BlockMovementTraits.movementNecessary(world, current))
+				if (!BlockMovementTraits.movementNecessary(currentState, world, current))
 					break;
 				if (BlockMovementTraits.isBrittle(currentState))
 					break;
@@ -207,7 +207,7 @@ public class ChassisTileEntity extends SmartTileEntity {
 					continue;
 				if (!searchPos.withinDistance(pos, chassisRange + .5f))
 					continue;
-				if (!BlockMovementTraits.movementNecessary(world, searchPos))
+				if (!BlockMovementTraits.movementNecessary(searchedState, world, searchPos))
 					continue;
 				if (BlockMovementTraits.isBrittle(searchedState))
 					continue;
