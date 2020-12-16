@@ -22,6 +22,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 
 import static com.simibubi.create.AllBlocks.MECHANICAL_PISTON_HEAD;
 import static com.simibubi.create.AllBlocks.PISTON_EXTENSION_POLE;
@@ -143,7 +144,7 @@ public class PistonContraption extends TranslatingContraption {
 	}
 
 	@Override
-	protected boolean addToInitialFrontier(World world, BlockPos pos, Direction direction, List<BlockPos> frontier) {
+	protected boolean addToInitialFrontier(World world, BlockPos pos, Direction direction, Queue<BlockPos> frontier) {
 		frontier.clear();
 		boolean sticky = isStickyPiston(world.getBlockState(pos.offset(orientation, -1)));
 		boolean retracting = direction != orientation;

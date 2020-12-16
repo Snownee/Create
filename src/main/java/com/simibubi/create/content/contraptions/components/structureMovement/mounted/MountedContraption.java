@@ -2,7 +2,7 @@ package com.simibubi.create.content.contraptions.components.structureMovement.mo
 
 import static com.simibubi.create.content.contraptions.components.structureMovement.mounted.CartAssemblerBlock.RAIL_SHAPE;
 
-import java.util.List;
+import java.util.Queue;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -70,7 +70,7 @@ public class MountedContraption extends Contraption {
 	}
 	
 	@Override
-	protected boolean addToInitialFrontier(World world, BlockPos pos, Direction direction, List<BlockPos> frontier) {
+	protected boolean addToInitialFrontier(World world, BlockPos pos, Direction direction, Queue<BlockPos> frontier) {
 		frontier.clear();
 		frontier.add(pos.up());
 		return true;

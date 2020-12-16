@@ -8,9 +8,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
@@ -146,7 +148,7 @@ public abstract class Contraption {
 	}
 
 	protected boolean addToInitialFrontier(World world, BlockPos pos, Direction forcedDirection,
-		List<BlockPos> frontier) {
+		Queue<BlockPos> frontier) {
 		return true;
 	}
 
@@ -159,7 +161,7 @@ public abstract class Contraption {
 
 	public boolean searchMovedStructure(World world, BlockPos pos, @Nullable Direction forcedDirection) {
 		initialPassengers.clear();
-		List<BlockPos> frontier = new ArrayList<>();
+		Queue<BlockPos> frontier = new LinkedList<>();
 		Set<BlockPos> visited = new HashSet<>();
 		anchor = pos;
 
@@ -173,7 +175,7 @@ public abstract class Contraption {
 		for (int limit = 100000; limit > 0; limit--) {
 			if (frontier.isEmpty())
 				return true;
-			if (!moveBlock(world, frontier.remove(0), forcedDirection, frontier, visited))
+			if (!moveBlock(world, forcedDirection, frontier, visited))
 				return false;
 		}
 		return false;
@@ -239,10 +241,13 @@ public abstract class Contraption {
 		fluidStorage.forEach((pos, mfs) -> mfs.tick(entity, pos, world.isRemote));
 	}
 
-	protected boolean moveBlock(World world, BlockPos pos, Direction forcedDirection, List<BlockPos> frontier,
+	/** move the first block in frontier queue */
+	protected boolean moveBlock(World world, Direction forcedDirection, Queue<BlockPos> frontier,
 		Set<BlockPos> visited) {
+		BlockPos pos = frontier.poll();
+		if (pos == null)
+			return false;
 		visited.add(pos);
-		frontier.remove(pos);
 
 		if (!world.isBlockPresent(pos))
 			return false;
@@ -324,7 +329,7 @@ public abstract class Contraption {
 		return blocks.size() <= AllConfigs.SERVER.kinetics.maxBlocksMoved.get();
 	}
 
-	private void moveBearing(BlockPos pos, List<BlockPos> frontier, Set<BlockPos> visited, BlockState state) {
+	private void moveBearing(BlockPos pos, Queue<BlockPos> frontier, Set<BlockPos> visited, BlockState state) {
 		Direction facing = state.get(MechanicalBearingBlock.FACING);
 		if (!canAxisBeStabilized(facing.getAxis())) {
 			BlockPos offset = pos.offset(facing);
@@ -335,7 +340,7 @@ public abstract class Contraption {
 		pendingSubContraptions.add(new BlockFace(pos, facing));
 	}
 
-	private void moveBelt(BlockPos pos, List<BlockPos> frontier, Set<BlockPos> visited, BlockState state) {
+	private void moveBelt(BlockPos pos, Queue<BlockPos> frontier, Set<BlockPos> visited, BlockState state) {
 		BlockPos nextPos = BeltBlock.nextSegmentPosition(state, pos, true);
 		BlockPos prevPos = BeltBlock.nextSegmentPosition(state, pos, false);
 		if (nextPos != null && !visited.contains(nextPos))
@@ -356,7 +361,7 @@ public abstract class Contraption {
 		}
 	}
 
-	private void movePulley(World world, BlockPos pos, List<BlockPos> frontier, Set<BlockPos> visited) {
+	private void movePulley(World world, BlockPos pos, Queue<BlockPos> frontier, Set<BlockPos> visited) {
 		int limit = AllConfigs.SERVER.kinetics.maxRopeLength.get();
 		BlockPos ropePos = pos;
 		while (limit-- >= 0) {
@@ -374,7 +379,7 @@ public abstract class Contraption {
 		}
 	}
 
-	private boolean moveMechanicalPiston(World world, BlockPos pos, List<BlockPos> frontier, Set<BlockPos> visited,
+	private boolean moveMechanicalPiston(World world, BlockPos pos, Queue<BlockPos> frontier, Set<BlockPos> visited,
 		BlockState state) {
 		int limit = AllConfigs.SERVER.kinetics.maxPistonPoles.get();
 		Direction direction = state.get(MechanicalPistonBlock.FACING);
@@ -420,7 +425,7 @@ public abstract class Contraption {
 		return true;
 	}
 
-	private boolean moveChassis(World world, BlockPos pos, Direction movementDirection, List<BlockPos> frontier,
+	private boolean moveChassis(World world, BlockPos pos, Direction movementDirection, Queue<BlockPos> frontier,
 		Set<BlockPos> visited) {
 		TileEntity te = world.getTileEntity(pos);
 		if (!(te instanceof ChassisTileEntity))
