@@ -120,7 +120,7 @@ public class MechanicalBearingTileEntity extends GeneratingKineticTileEntity imp
 
 		Direction direction = getBlockState().get(FACING);
 		BearingContraption contraption = new BearingContraption(isWindmill(), direction);
-		if (!contraption.assemble(world, pos))
+		if (!contraption.assemble(world, pos).isSuccess())
 			return;
 
 		AllTriggers.triggerForNearbyPlayers(AllTriggers.WINDMILL, world, pos, 5);

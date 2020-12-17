@@ -8,6 +8,8 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.simibubi.create.content.contraptions.components.structureMovement.AllContraptionTypes;
 import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
+import com.simibubi.create.content.contraptions.components.structureMovement.result.AssemblyResult;
+import com.simibubi.create.content.contraptions.components.structureMovement.result.AssemblyResults;
 import com.simibubi.create.foundation.utility.NBTHelper;
 
 import net.minecraft.nbt.CompoundNBT;
@@ -47,7 +49,7 @@ public class ClockworkContraption extends Contraption {
 
 		hourArm.facing = direction;
 		hourArm.handType = HandType.HOUR;
-		if (!hourArm.assemble(world, pos))
+		if (!hourArm.assemble(world, pos).isSuccess())
 			return null;
 		for (int i = 0; i < 16; i++) {
 			BlockPos offsetPos = BlockPos.ZERO.offset(direction, i);
@@ -65,7 +67,7 @@ public class ClockworkContraption extends Contraption {
 			minuteArm.offset = hourArmBlocks;
 			minuteArm.ignoreBlocks(hourArm.getBlocks()
 				.keySet(), hourArm.anchor);
-			if (!minuteArm.assemble(world, pos))
+			if (!minuteArm.assemble(world, pos).isSuccess())
 				return null;
 			if (minuteArm.getBlocks()
 				.isEmpty())
@@ -82,21 +84,21 @@ public class ClockworkContraption extends Contraption {
 	}
 	
 	@Override
-	public boolean assemble(World world, BlockPos pos) {
+	public AssemblyResult assemble(World world, BlockPos pos) {
 		return searchMovedStructure(world, pos, facing);
 	}
 
 	@Override
-	public boolean searchMovedStructure(World world, BlockPos pos, Direction direction) {
+	public AssemblyResult searchMovedStructure(World world, BlockPos pos, Direction direction) {
 		return super.searchMovedStructure(world, pos.offset(direction, offset + 1), null);
 	}
 
 	@Override
-	protected boolean moveBlock(World world, Direction direction, Queue<BlockPos> frontier,
+	protected AssemblyResult moveBlock(World world, Direction direction, Queue<BlockPos> frontier,
 		Set<BlockPos> visited) {
 		if (ignoreBlocks.contains(frontier.peek())) {
 			frontier.poll();
-			return true;
+			return AssemblyResults.SUCCESS.get();
 		}
 		return super.moveBlock(world, direction, frontier, visited);
 	}

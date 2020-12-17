@@ -10,6 +10,8 @@ import com.simibubi.create.AllBlocks;
 import com.simibubi.create.content.contraptions.components.structureMovement.AllContraptionTypes;
 import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
 import com.simibubi.create.content.contraptions.components.structureMovement.mounted.CartAssemblerTileEntity.CartMovementMode;
+import com.simibubi.create.content.contraptions.components.structureMovement.result.AssemblyResult;
+import com.simibubi.create.content.contraptions.components.structureMovement.result.AssemblyResults;
 import com.simibubi.create.foundation.utility.Iterate;
 import com.simibubi.create.foundation.utility.NBTHelper;
 import com.simibubi.create.foundation.utility.VecHelper;
@@ -52,21 +54,22 @@ public class MountedContraption extends Contraption {
 	}
 	
 	@Override
-	public boolean assemble(World world, BlockPos pos) {
+	public AssemblyResult assemble(World world, BlockPos pos) {
 		BlockState state = world.getBlockState(pos);
 		if (!state.has(RAIL_SHAPE))
-			return false;
-		if (!searchMovedStructure(world, pos, null))
-			return false;
+			return AssemblyResults.UNDEFINED.get();
+		AssemblyResult result = searchMovedStructure(world, pos, null);
+		if (!result.isSuccess())
+			return result;
 		
 		Axis axis = state.get(RAIL_SHAPE) == RailShape.EAST_WEST ? Axis.X : Axis.Z;
 		addBlock(pos, Pair.of(new BlockInfo(pos, AllBlocks.MINECART_ANCHOR.getDefaultState()
 			.with(BlockStateProperties.HORIZONTAL_AXIS, axis), null), null));
 		
 		if (blocks.size() == 1)
-			return false;
+			return AssemblyResults.UNDEFINED.get();
 		
-		return true;
+		return result;
 	}
 	
 	@Override

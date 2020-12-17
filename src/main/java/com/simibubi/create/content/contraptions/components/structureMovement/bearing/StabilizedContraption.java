@@ -2,6 +2,8 @@ package com.simibubi.create.content.contraptions.components.structureMovement.be
 
 import com.simibubi.create.content.contraptions.components.structureMovement.AllContraptionTypes;
 import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
+import com.simibubi.create.content.contraptions.components.structureMovement.result.AssemblyResult;
+import com.simibubi.create.content.contraptions.components.structureMovement.result.AssemblyResults;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
@@ -20,15 +22,16 @@ public class StabilizedContraption extends Contraption {
 	}
 
 	@Override
-	public boolean assemble(World world, BlockPos pos) {
+	public AssemblyResult assemble(World world, BlockPos pos) {
 		BlockPos offset = pos.offset(facing);
-		if (!searchMovedStructure(world, offset, null))
-			return false;
+		AssemblyResult result = searchMovedStructure(world, offset, null);
+		if (!result.isSuccess())
+			return result;
 		startMoving(world);
 		expandBoundsAroundAxis(Axis.Y);
 		if (blocks.isEmpty())
-			return false;
-		return true;
+			return AssemblyResults.UNDEFINED.get();
+		return result;
 	}
 	
 	@Override

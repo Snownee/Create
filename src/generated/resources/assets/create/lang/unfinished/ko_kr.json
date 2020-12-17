@@ -1,5 +1,5 @@
 {
-	"_": "Missing Localizations: 842",
+	"_": "Missing Localizations: 843",
 
 	"_": "->------------------------]  Game Elements  [------------------------<-",
 
@@ -827,6 +827,7 @@
 	"create.gui.stressometer.no_rotation": "회전없음",
 	"create.gui.contraptions.not_fast_enough": "이 %1$s은(는) 작동하기에 _회전 속도_가 _부족합니다_",
 	"create.gui.contraptions.network_overstressed": "이 장치는 _과부하_되었습니다. _높은 피로도_ 용량을 가진 발전기를 추가로 설치하거나 장치 _속도_를 _늦추세요_.",
+	"create.gui.goggles.contraptions.unmovable_block": "UNLOCALIZED: Unmovable block: \"%s\" at (%d, %d, %d)",
 	"create.gui.adjustable_crate.title": "가변 창고 ",
 	"create.gui.adjustable_crate.storageSpace": "저장 공간",
 	"create.gui.stockpile_switch.title": "수량 스위치",

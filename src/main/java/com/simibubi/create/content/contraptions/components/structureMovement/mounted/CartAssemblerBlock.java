@@ -230,7 +230,7 @@ public class CartAssemblerBlock extends AbstractRailBlock
 				.orElse(CartMovementMode.ROTATE);
 
 		MountedContraption contraption = new MountedContraption(mode);
-		if (!contraption.assemble(world, pos))
+		if (!contraption.assemble(world, pos).isSuccess())
 			return;
 
 		boolean couplingFound = contraption.connectedCart != null;

@@ -5,6 +5,8 @@ import com.simibubi.create.content.contraptions.components.structureMovement.Blo
 import com.simibubi.create.content.contraptions.components.structureMovement.ContraptionCollider;
 import com.simibubi.create.content.contraptions.components.structureMovement.ControlledContraptionEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.piston.LinearActuatorTileEntity;
+import com.simibubi.create.content.contraptions.components.structureMovement.result.AssemblyResult;
+import com.simibubi.create.content.contraptions.components.structureMovement.result.AssemblyResults;
 import com.simibubi.create.foundation.config.AllConfigs;
 import com.simibubi.create.foundation.tileEntity.behaviour.CenteredSideValueBoxTransform;
 import com.simibubi.create.foundation.tileEntity.behaviour.ValueBoxTransform;
@@ -42,23 +44,25 @@ public class PulleyTileEntity extends LinearActuatorTileEntity {
 	}
 
 	@Override
-	protected void assemble() {
+	protected AssemblyResult assemble() {
+		AssemblyResult result = AssemblyResults.UNDEFINED.get();
 		if (!(world.getBlockState(pos)
 			.getBlock() instanceof PulleyBlock))
-			return;
+			return result;
 		if (speed == 0)
-			return;
+			return result;
 		if (offset >= getExtensionRange() && getSpeed() > 0)
-			return;
+			return result;
 		if (offset <= 0 && getSpeed() < 0)
-			return;
+			return result;
 
 		// Collect Construct
 		if (!world.isRemote) {
 			BlockPos anchor = pos.down(MathHelper.floor(offset + 1));
 			initialOffset = MathHelper.floor(offset);
 			PulleyContraption contraption = new PulleyContraption(initialOffset);
-			boolean canAssembleStructure = contraption.assemble(world, anchor);
+			result = contraption.assemble(world, anchor);
+			boolean canAssembleStructure = result.isSuccess();
 
 			if (canAssembleStructure) {
 				Direction movementDirection = getSpeed() > 0 ? Direction.DOWN : Direction.UP;
@@ -68,7 +72,7 @@ public class PulleyTileEntity extends LinearActuatorTileEntity {
 			}
 
 			if (!canAssembleStructure && getSpeed() > 0)
-				return;
+				return result;
 
 			for (int i = ((int) offset); i > 0; i--) {
 				BlockPos offset = pos.down(i);
@@ -93,6 +97,7 @@ public class PulleyTileEntity extends LinearActuatorTileEntity {
 		clientOffsetDiff = 0;
 		running = true;
 		sendData();
+		return result;
 	}
 
 	@Override

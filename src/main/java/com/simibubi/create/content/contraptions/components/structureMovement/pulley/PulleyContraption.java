@@ -2,6 +2,7 @@ package com.simibubi.create.content.contraptions.components.structureMovement.pu
 
 import com.simibubi.create.content.contraptions.components.structureMovement.AllContraptionTypes;
 import com.simibubi.create.content.contraptions.components.structureMovement.TranslatingContraption;
+import com.simibubi.create.content.contraptions.components.structureMovement.result.AssemblyResult;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.BlockPos;
@@ -23,11 +24,11 @@ public class PulleyContraption extends TranslatingContraption {
 	}
 
 	@Override
-	public boolean assemble(World world, BlockPos pos) {
-		if (!searchMovedStructure(world, pos, null))
-			return false;
-		startMoving(world);
-		return true;
+	public AssemblyResult assemble(World world, BlockPos pos) {
+		AssemblyResult result = searchMovedStructure(world, pos, null);
+		if (result.isSuccess())
+			startMoving(world);
+		return result;
 	}
 
 	@Override

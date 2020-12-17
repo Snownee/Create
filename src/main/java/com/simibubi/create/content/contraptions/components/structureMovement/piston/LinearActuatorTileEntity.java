@@ -6,6 +6,8 @@ import com.simibubi.create.content.contraptions.base.KineticTileEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.ControlledContraptionEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.IControlContraption;
+import com.simibubi.create.content.contraptions.components.structureMovement.result.AssemblyResult;
+import com.simibubi.create.content.contraptions.components.structureMovement.result.AssemblyResults;
 import com.simibubi.create.foundation.tileEntity.TileEntityBehaviour;
 import com.simibubi.create.foundation.tileEntity.behaviour.ValueBoxTransform;
 import com.simibubi.create.foundation.tileEntity.behaviour.scrollvalue.ScrollOptionBehaviour;
@@ -27,6 +29,7 @@ public abstract class LinearActuatorTileEntity extends KineticTileEntity impleme
 	protected boolean forceMove;
 	protected ScrollOptionBehaviour<MovementMode> movementMode;
 	protected boolean waitingForSpeedChange;
+	protected AssemblyResult lastResult = AssemblyResults.UNDEFINED.get();
 
 	// Custom position sync
 	protected float clientOffsetDiff;
@@ -77,10 +80,10 @@ public abstract class LinearActuatorTileEntity extends KineticTileEntity impleme
 					tryDisassemble();
 				else
 					sendData();
-				return;
 			} else {
-				if (getSpeed() != 0)
-					assemble();
+				if (getSpeed() != 0) {
+					lastResult = assemble();
+				}
 			}
 			return;
 		}
@@ -153,6 +156,7 @@ public abstract class LinearActuatorTileEntity extends KineticTileEntity impleme
 		compound.putBoolean("Running", running);
 		compound.putBoolean("Waiting", waitingForSpeedChange);
 		compound.putFloat("Offset", offset);
+		compound.put("LastResult", lastResult.write(new CompoundNBT()));
 		super.write(compound, clientPacket);
 		
 		if (clientPacket && forceMove) {
@@ -169,6 +173,7 @@ public abstract class LinearActuatorTileEntity extends KineticTileEntity impleme
 		running = compound.getBoolean("Running");
 		waitingForSpeedChange = compound.getBoolean("Waiting");
 		offset = compound.getFloat("Offset");
+		lastResult = AssemblyResults.read(compound.getCompound("LastResult"));
 		super.read(compound, clientPacket);
 
 		if (!clientPacket)
@@ -185,7 +190,7 @@ public abstract class LinearActuatorTileEntity extends KineticTileEntity impleme
 
 	public abstract void disassemble();
 
-	protected abstract void assemble();
+	protected abstract AssemblyResult assemble();
 
 	protected abstract int getExtensionRange();
 
@@ -289,4 +294,9 @@ public abstract class LinearActuatorTileEntity extends KineticTileEntity impleme
 		return pos;
 	}
 
+	@Override
+	public boolean addToGoggleTooltip(List<String> tooltip, boolean isPlayerSneaking) {
+		boolean added = super.addToGoggleTooltip(tooltip, isPlayerSneaking);
+		return lastResult.addToGoggleTooltip(tooltip, isPlayerSneaking) || added;
+	}
 }

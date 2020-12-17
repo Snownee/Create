@@ -5,6 +5,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import com.simibubi.create.AllTags.AllBlockTags;
 import com.simibubi.create.content.contraptions.components.structureMovement.AllContraptionTypes;
 import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
+import com.simibubi.create.content.contraptions.components.structureMovement.result.AssemblyResult;
+import com.simibubi.create.content.contraptions.components.structureMovement.result.AssemblyResults;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
@@ -29,17 +31,18 @@ public class BearingContraption extends Contraption {
 	}
 
 	@Override
-	public boolean assemble(World world, BlockPos pos) {
+	public AssemblyResult assemble(World world, BlockPos pos) {
 		BlockPos offset = pos.offset(facing);
-		if (!searchMovedStructure(world, offset, null))
-			return false;
+		AssemblyResult result = searchMovedStructure(world, offset, null);
+		if (!result.isSuccess())
+			return result;
 		startMoving(world);
 		expandBoundsAroundAxis(facing.getAxis());
 		if (isWindmill && sailBlocks == 0)
-			return false;
+			return AssemblyResults.UNDEFINED.get();
 		if (blocks.isEmpty())
-			return false;
-		return true;
+			return AssemblyResults.UNDEFINED.get();
+		return result;
 	}
 
 	@Override

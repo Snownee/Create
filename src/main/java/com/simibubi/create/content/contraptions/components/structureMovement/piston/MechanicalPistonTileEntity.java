@@ -6,6 +6,8 @@ import com.simibubi.create.content.contraptions.components.structureMovement.Con
 import com.simibubi.create.content.contraptions.components.structureMovement.ControlledContraptionEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.DirectionalExtenderScrollOptionSlot;
 import com.simibubi.create.content.contraptions.components.structureMovement.piston.MechanicalPistonBlock.PistonState;
+import com.simibubi.create.content.contraptions.components.structureMovement.result.AssemblyResult;
+import com.simibubi.create.content.contraptions.components.structureMovement.result.AssemblyResults;
 import com.simibubi.create.foundation.tileEntity.behaviour.ValueBoxTransform;
 import com.simibubi.create.foundation.utility.ServerSpeedProvider;
 
@@ -41,17 +43,18 @@ public class MechanicalPistonTileEntity extends LinearActuatorTileEntity {
 	}
 
 	@Override
-	public void assemble() {
+	public AssemblyResult assemble() {
 		if (!(world.getBlockState(pos)
 			.getBlock() instanceof MechanicalPistonBlock))
-			return;
+			return AssemblyResults.UNDEFINED.get();
 
 		Direction direction = getBlockState().get(BlockStateProperties.FACING);
 
 		// Collect Construct
 		PistonContraption contraption = new PistonContraption(direction, getMovementSpeed() < 0);
-		if (!contraption.assemble(world, pos))
-			return;
+		AssemblyResult result = contraption.assemble(world, pos);
+		if (!result.isSuccess())
+			return result;
 
 		Direction positive = Direction.getFacingFromAxis(AxisDirection.POSITIVE, direction.getAxis());
 		Direction movementDirection =
@@ -60,13 +63,13 @@ public class MechanicalPistonTileEntity extends LinearActuatorTileEntity {
 		BlockPos anchor = contraption.anchor.offset(direction, contraption.initialExtensionProgress);
 		if (ContraptionCollider.isCollidingWithWorld(world, contraption, anchor.offset(movementDirection),
 			movementDirection))
-			return;
+			return AssemblyResults.UNDEFINED.get();
 
 		// Check if not at limit already
 		extensionLength = contraption.extensionLength;
 		float resultingOffset = contraption.initialExtensionProgress + Math.signum(getMovementSpeed()) * .5f;
 		if (resultingOffset <= 0 || resultingOffset >= extensionLength) {
-			return;
+			return AssemblyResults.UNDEFINED.get();
 		}
 
 		// Run
@@ -81,6 +84,7 @@ public class MechanicalPistonTileEntity extends LinearActuatorTileEntity {
 		applyContraptionPosition();
 		forceMove = true;
 		world.addEntity(movedContraption);
+		return result;
 	}
 
 	@Override

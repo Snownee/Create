@@ -40,6 +40,9 @@ import com.simibubi.create.content.contraptions.components.structureMovement.pis
 import com.simibubi.create.content.contraptions.components.structureMovement.pulley.PulleyBlock;
 import com.simibubi.create.content.contraptions.components.structureMovement.pulley.PulleyBlock.MagnetBlock;
 import com.simibubi.create.content.contraptions.components.structureMovement.pulley.PulleyBlock.RopeBlock;
+import com.simibubi.create.content.contraptions.components.structureMovement.result.AssemblyResult;
+import com.simibubi.create.content.contraptions.components.structureMovement.result.AssemblyResults;
+import com.simibubi.create.content.contraptions.components.structureMovement.result.UnmovableBlockResult;
 import com.simibubi.create.content.contraptions.components.structureMovement.pulley.PulleyTileEntity;
 import com.simibubi.create.content.contraptions.fluids.tank.FluidTankTileEntity;
 import com.simibubi.create.content.contraptions.relays.belt.BeltBlock;
@@ -133,7 +136,7 @@ public abstract class Contraption {
 		stabilizedSubContraptions = new HashMap<>();
 	}
 
-	public abstract boolean assemble(World world, BlockPos pos);
+	public abstract AssemblyResult assemble(World world, BlockPos pos);
 
 	protected abstract boolean canAxisBeStabilized(Axis axis);
 
@@ -159,7 +162,7 @@ public abstract class Contraption {
 		return contraption;
 	}
 
-	public boolean searchMovedStructure(World world, BlockPos pos, @Nullable Direction forcedDirection) {
+	public AssemblyResult searchMovedStructure(World world, BlockPos pos, @Nullable Direction forcedDirection) {
 		initialPassengers.clear();
 		Queue<BlockPos> frontier = new LinkedList<>();
 		Set<BlockPos> visited = new HashSet<>();
@@ -171,14 +174,16 @@ public abstract class Contraption {
 		if (!BlockMovementTraits.isBrittle(world.getBlockState(pos)))
 			frontier.add(pos);
 		if (!addToInitialFrontier(world, pos, forcedDirection, frontier))
-			return false;
+			return AssemblyResults.UNDEFINED.get();
+		AssemblyResult result;
 		for (int limit = 100000; limit > 0; limit--) {
 			if (frontier.isEmpty())
-				return true;
-			if (!moveBlock(world, forcedDirection, frontier, visited))
-				return false;
+				return AssemblyResults.SUCCESS.get();
+			result = moveBlock(world, forcedDirection, frontier, visited);
+			if (!result.isSuccess())
+				return result;
 		}
-		return false;
+		return AssemblyResults.UNDEFINED.get();
 	}
 
 	public void onEntityCreated(AbstractContraptionEntity entity) {
@@ -190,7 +195,7 @@ public abstract class Contraption {
 			StabilizedContraption subContraption = new StabilizedContraption(face);
 			World world = entity.world;
 			BlockPos pos = blockFace.getPos();
-			if (!subContraption.assemble(world, pos))
+			if (!subContraption.assemble(world, pos).isSuccess())
 				continue;
 			subContraption.removeBlocksFromWorld(world, BlockPos.ZERO);
 			OrientedContraptionEntity movedContraption =
@@ -242,25 +247,25 @@ public abstract class Contraption {
 	}
 
 	/** move the first block in frontier queue */
-	protected boolean moveBlock(World world, Direction forcedDirection, Queue<BlockPos> frontier,
+	protected AssemblyResult moveBlock(World world, Direction forcedDirection, Queue<BlockPos> frontier,
 		Set<BlockPos> visited) {
 		BlockPos pos = frontier.poll();
 		if (pos == null)
-			return false;
+			return AssemblyResults.UNDEFINED.get();
 		visited.add(pos);
 
 		if (!world.isBlockPresent(pos))
-			return false;
+			return AssemblyResults.UNDEFINED.get();
 		if (isAnchoringBlockAt(pos))
-			return true;
+			return AssemblyResults.SUCCESS.get();
 		BlockState state = world.getBlockState(pos);
 		if (!BlockMovementTraits.movementNecessary(state, world, pos))
-			return true;
+			return AssemblyResults.SUCCESS.get();
 		if (!movementAllowed(state, world, pos))
-			return false;
+			return new UnmovableBlockResult(pos, state.getBlock());
 		if (state.getBlock() instanceof AbstractChassisBlock
 			&& !moveChassis(world, pos, forcedDirection, frontier, visited))
-			return false;
+			return AssemblyResults.UNDEFINED.get();
 
 		if (AllBlocks.ADJUSTABLE_CRATE.has(state))
 			AdjustableCrateBlock.splitCrate(world, pos);
@@ -283,7 +288,7 @@ public abstract class Contraption {
 		// Pistons drag their attaches poles and extension
 		if (state.getBlock() instanceof MechanicalPistonBlock)
 			if (!moveMechanicalPiston(world, pos, frontier, visited, state))
-				return false;
+				return AssemblyResults.UNDEFINED.get();
 
 		// Doors try to stay whole
 		if (state.getBlock() instanceof DoorBlock) {
@@ -309,7 +314,7 @@ public abstract class Contraption {
 				continue;
 			if (!movementAllowed(blockState, world, offsetPos)) {
 				if (offset == forcedDirection && isSlimeBlock)
-					return false;
+					return AssemblyResults.UNDEFINED.get();
 				continue;
 			}
 
@@ -326,7 +331,10 @@ public abstract class Contraption {
 		}
 
 		addBlock(pos, capture(world, pos));
-		return blocks.size() <= AllConfigs.SERVER.kinetics.maxBlocksMoved.get();
+		if (blocks.size() <= AllConfigs.SERVER.kinetics.maxBlocksMoved.get())
+			return AssemblyResults.SUCCESS.get();
+		else
+			return AssemblyResults.UNDEFINED.get();
 	}
 
 	private void moveBearing(BlockPos pos, Queue<BlockPos> frontier, Set<BlockPos> visited, BlockState state) {

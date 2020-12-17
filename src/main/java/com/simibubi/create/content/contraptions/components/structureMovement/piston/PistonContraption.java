@@ -4,6 +4,8 @@ import com.simibubi.create.content.contraptions.components.structureMovement.All
 import com.simibubi.create.content.contraptions.components.structureMovement.BlockMovementTraits;
 import com.simibubi.create.content.contraptions.components.structureMovement.TranslatingContraption;
 import com.simibubi.create.content.contraptions.components.structureMovement.piston.MechanicalPistonBlock.*;
+import com.simibubi.create.content.contraptions.components.structureMovement.result.AssemblyResult;
+import com.simibubi.create.content.contraptions.components.structureMovement.result.AssemblyResults;
 import com.simibubi.create.foundation.config.AllConfigs;
 import com.simibubi.create.foundation.utility.VecHelper;
 import net.minecraft.block.BlockState;
@@ -51,19 +53,20 @@ public class PistonContraption extends TranslatingContraption {
 	}
 
 	@Override
-	public boolean assemble(World world, BlockPos pos) {
+	public AssemblyResult assemble(World world, BlockPos pos) {
 		if (!collectExtensions(world, pos, orientation))
-			return false;
+			return AssemblyResults.UNDEFINED.get();
 		int count = blocks.size();
-		if (!searchMovedStructure(world, anchor, retract ? orientation.getOpposite() : orientation))
-			return false;
+		AssemblyResult result = searchMovedStructure(world, anchor, retract ? orientation.getOpposite() : orientation);
+		if (!result.isSuccess())
+			return result;
 		if (blocks.size() == count) { // no new blocks added
 			bounds = pistonExtensionCollisionBox;
 		} else {
 			bounds = bounds.union(pistonExtensionCollisionBox);
 		}
 		startMoving(world);
-		return true;
+		return result;
 	}
 
 	private boolean collectExtensions(World world, BlockPos pos, Direction direction) {
